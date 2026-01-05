@@ -8952,13 +8952,10 @@ addcmd('un2022materials',{'unuse2022materials'},function(args, speaker)
 end)
 
 addcmd('goto',{'to','tp'},function(args, speaker)
-    local getChar = function() return speaker.Character end
-	local getPlr  = function(input) return getPlayer(input, speaker) end
-	local Concat = table.concat
 
-	local input   = Concat(args," ")
-	local targets = getPlr(input)
-	local char    = getChar()
+	local input   = table.concat(args," ")
+	local targets = getPlayer(input, speaker)
+	local char    = speaker.Character
 	if #targets > 0 then
 		for _,plr in ipairs(targets) do
 			char:PivotTo(Players[plr].Character:GetPivot())
