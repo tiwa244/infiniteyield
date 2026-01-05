@@ -9,6 +9,10 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/tiwa244/infiniteyield
  - Currently 400 commands
  - Open Source
  - 8+ years of development
+# Testing Version 
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/tiwa244/infiniteyield/master/test"))()
+```
 
 ## Developers
 
