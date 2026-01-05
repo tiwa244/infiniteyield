@@ -8953,25 +8953,33 @@ end)
 
 addcmd('goto',{'to','tp'},function(args, speaker)
 
-	local input   = table.concat(args," ")
-	local targets = getPlayer(input, speaker)
-	local char    = speaker.Character
-	if #targets > 0 then
-		for _,plr in ipairs(targets) do
-			char:PivotTo(Players[plr].Character:GetPivot())
-		end
-	else
-		local x,y,z = input:match("^(%-?%d+%.?%d*)[,%s]+(%-?%d+%.?%d*)[,%s]+(%-?%d+%.?%d*)$")
-		if x and y and z then
-			char:PivotTo(CFrame.new(tonumber(x),tonumber(y),tonumber(z)))
-		else
-		   notify("Invalid input: not a valid player or X,Y,Z coordinates",3)
-		   notify("bro what are you doing u tryna point to air lil bro")
-		end
-	end
+local input = table.concat(args, " ")
+local targets = getPlayer(input, speaker)
+local char = speaker.Character
 
+if not char then
+    notify("no character lil bro", 3)
+    return
+end
 
-	execCmd('breakvelocity')
+if #targets > 0 then
+    for _, plr in ipairs(targets) do
+        local targetChar = Players[plr].Character
+        if targetChar and targetChar.PrimaryPart then
+            char:PivotTo(targetChar:GetPivot())
+        end
+    end
+else
+    local x, y, z = input:match("^(%-?%d+%.?%d*)[,%s]+(%-?%d+%.?%d*)[,%s]+(%-?%d+%.?%d*)$")
+    if x and y and z then
+        char:PivotTo(CFrame.new(tonumber(x), tonumber(y), tonumber(z)))
+    else
+        notify("Invalid input: not a valid player or X Y Z coords", 3)
+        notify("bro what are you doing u tryna point to air lil bro 💀", 3)
+    end
+end
+
+   execCmd("breakvelocity")
 end,true)
 
 addcmd('tweengoto',{'tgoto','tto','tweento'},function(args, speaker)
@@ -13238,4 +13246,3 @@ task.spawn(function()
 	IntroBackground:Destroy()
 	minimizeHolder()
 end)
-⬇
