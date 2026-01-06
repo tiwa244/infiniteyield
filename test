@@ -9371,9 +9371,44 @@ addcmd('unmuteboombox',{},function(args, speaker)
 end)
 
 addcmd("reset", {}, function(args, speaker)
- if NamelessRespawn then
-  NamelessRespawn()
-  end
+	local Player = Player -- IY global
+	local oldChar = Player.Character
+	if not oldChar then return end
+
+	local rootPart = oldChar:FindFirstChild("HumanoidRootPart")
+	while not rootPart do
+		Wait(0.1)
+		rootPart = oldChar:FindFirstChild("HumanoidRootPart")
+	end
+
+	local respawnCFrame = rootPart.CFrame
+
+	local humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
+	while not humanoid do
+		Wait(0.1)
+		humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
+	end
+
+	humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+	humanoid.Health = 0
+
+	local newChar = Player.CharacterAdded:Wait()
+	local newRoot = newChar:FindFirstChild("HumanoidRootPart")
+	while not newRoot do
+		Wait(0.1)
+		newRoot = newChar:FindFirstChild("HumanoidRootPart")
+	end
+
+	local startTime = tick()
+	local teleportThreshold = 15
+
+	while tick() - startTime < 0.4 do
+		if (newRoot.Position - respawnCFrame.Position).Magnitude > teleportThreshold then
+			newRoot.CFrame = respawnCFrame
+			startTime = tick()
+		end
+		Wait(0.1)
+    end
 end)
 
 addcmd('freezeanims',{},function(args, speaker)
@@ -13283,3 +13318,4 @@ task.spawn(function()
 	IntroBackground:Destroy()
 	minimizeHolder()
 end)
+print("useless, if the reset commands even works.")
