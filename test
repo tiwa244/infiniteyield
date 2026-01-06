@@ -9512,6 +9512,7 @@ function NamelessRespawn()
 	local humanoid = getPlrHum(oldChar)
 	while not humanoid do Wait(.1) humanoid=getPlrHum(oldChar) end
 	humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+    BreakJoints()
 	humanoid.Health = 0
 
 	local newChar = player.CharacterAdded:Wait()
