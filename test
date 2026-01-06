@@ -9371,14 +9371,9 @@ addcmd('unmuteboombox',{},function(args, speaker)
 end)
 
 addcmd("reset", {}, function(args, speaker)
-	local humanoid = speaker.Character and speaker.Character:FindFirstChildWhichIsA("Humanoid")
-	if replicatesignal then
-		replicatesignal(speaker.Kill)
-	elseif humanoid then
-		humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-	else
-		speaker.Character:BreakJoints()
-	end
+ if respawn then
+  respawn()
+  end
 end)
 
 addcmd('freezeanims',{},function(args, speaker)
