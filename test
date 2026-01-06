@@ -66,7 +66,6 @@ TweenService = Services.TweenService
 HttpService = Services.HttpService
 MarketplaceService = Services.MarketplaceService
 RunService = Services.RunService
-local plr=Players.LocalPlayer;
 TeleportService = Services.TeleportService
 StarterGui = Services.StarterGui
 GuiService = Services.GuiService
@@ -4171,85 +4170,6 @@ CopyPath.MouseButton1Click:Connect(function()
 	end
 end)
 
-NA_GRAB_BODY = (function()
-	local T = {}
-	local _cache = _rp_cache or setmetatable({}, { __mode = "k" })
-
-	local overrideModel = nil
-	local overrideConn = nil
-	local selectingOverride = false
-
-	local setOverrideModel
-	local pickOverrideModel
-
-	local function asChar(obj)
-		if not obj or typeof(obj) ~= "Instance" then return nil end
-		if obj:IsA("Player") then return obj.Character end
-		if obj:IsA("Model") then return obj end
-		return nil
-	end)
-
-	function getRoot(char)
-	local rec, model = NA_GRAB_BODY.ensure(char)
-	if not rec then return nil end
-	return rec.root or (model and NA_GRAB_BODY.firstPart(model)) or nil
-end
-
-function getTorso(char)
-	local rec, model = NA_GRAB_BODY.ensure(char)
-	if not rec then return nil end
-	return rec.torso or (model and NA_GRAB_BODY.firstPart(model)) or nil
-end
-
-function getHead(char)
-	local rec, model = NA_GRAB_BODY.ensure(char)
-	if not rec then return nil end
-	return rec.head or (model and NA_GRAB_BODY.firstPart(model)) or nil
-end
-
-function getChar()
-	local plr = Players.LocalPlayer
-	if not plr then return nil end
-	local rec, model = NA_GRAB_BODY.ensure(plr)
-	return model
-end
-
-function getPlrChar(plr)
-	return NA_GRAB_BODY.asChar(plr)
-end
-
-function getBp()
-	local plr = Players.LocalPlayer
-	return plr and plr:FindFirstChildOfClass("Backpack") or nil
-end
-
-function getHum(char)
-	local rec = NA_GRAB_BODY.ensure(char)
-	if not rec then return nil end
-	return rec.humanoid
-end
-
-function getPlrHum(plr)
-	return getHum(plr)
-end
-
-function IsR15(plr)
-	plr=(plr or Players.LocalPlayer)
-	if plr then
-		local h=getPlrHum(plr)
-		if h and h.RigType==Enum.HumanoidRigType.R15 then return true end
-	end
-	return false
-end
-
-function IsR6(plr)
-	plr=(plr or Players.LocalPlayer)
-	if plr then
-		local h=getPlrHum(plr)
-		if h and h.RigType==Enum.HumanoidRigType.R6 then return true end
-	end
-	return false
-end
 
 ChoosePart.MouseButton1Click:Connect(function()
 	if Path.Text ~= "" then
@@ -9451,48 +9371,14 @@ addcmd('unmuteboombox',{},function(args, speaker)
 	end
 end)
 
+
 addcmd("reset", {}, function(args, speaker)
-
-    local Player = Player -- IY global
-    local oldChar = Player.Character
-    if not oldChar then return end
-
-    local rootPart = oldChar:FindFirstChild("HumanoidRootPart")
-    while not rootPart do
-        Wait(0.1)
-        rootPart = oldChar:FindFirstChild("HumanoidRootPart")
-    end
-
-    -- store old position
-    local respawnCFrame = rootPart.CFrame
-
-    -- kill old humanoid like IY
-    local humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
-    if humanoid then
-        humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-        humanoid.Health = 0
-    else
-        oldChar:BreakJoints()
-    end
-
-    -- wait for new character
-    local newChar = Player.CharacterAdded:Wait()
-    local newRoot = newChar:FindFirstChild("HumanoidRootPart")
-    while not newRoot do
-        Wait(0.1)
-        newRoot = newChar:FindFirstChild("HumanoidRootPart")
-    end
-
-    -- teleport back like Nameless
-    local startTime = tick()
-    local teleportThreshold = 15
-    while tick() - startTime < 0.4 do
-        if (newRoot.Position - respawnCFrame.Position).Magnitude > teleportThreshold then
-            newRoot.CFrame = respawnCFrame
-            startTime = tick()
-        end
-        Wait(0.1)
-    end
+	local humanoid = speaker.Character and speaker.Character:FindFirstChildWhichIsA("Humanoid")
+	if humanoid then
+		humanoid.Health = 0
+	else
+		speaker.Character:BreakJoints()
+	end
 end)
 
 addcmd('freezeanims',{},function(args, speaker)
@@ -9516,7 +9402,7 @@ addcmd("respawn", {}, function(args, speaker)
 end)
 
 addcmd("refresh", {"re"}, function(args, speaker)
-	NamelessRespawn(speaker)
+	refresh(speaker)
 end)
 
 addcmd("god", {}, function(args, speaker)
