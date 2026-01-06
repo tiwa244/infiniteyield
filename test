@@ -9432,7 +9432,7 @@ addcmd("respawn", {}, function(args, speaker)
 end)
 
 addcmd("refresh", {"re"}, function(args, speaker)
-	refresh(speaker)
+	NamelessRespawn(speaker)
 end)
 
 addcmd("god", {}, function(args, speaker)
