@@ -9371,8 +9371,8 @@ addcmd('unmuteboombox',{},function(args, speaker)
 end)
 
 addcmd("reset", {}, function(args, speaker)
- if Respawn then
-  Respawn()
+ if NamelessRespawn then
+  NamelessRespawn()
   end
 end)
 
@@ -9480,6 +9480,29 @@ addcmd('invisible',{'invis'},function(args, speaker)
 	end
 
 function Respawn()
+		IsRunning = false
+		if IsInvis == true then
+			pcall(function()
+				Player.Character = Character
+				wait()
+				Character.Parent = workspace
+				Character:FindFirstChildWhichIsA'Humanoid':Destroy()
+				IsInvis = false
+				InvisibleCharacter.Parent = nil
+				invisRunning = false
+			end)
+		elseif IsInvis == false then
+			pcall(function()
+				Player.Character = Character
+				wait()
+				Character.Parent = workspace
+				Character:FindFirstChildWhichIsA'Humanoid':Destroy()
+				TurnVisible()
+			end)
+		end
+	end
+
+function NamelessRespawn()
 	local Player = Player -- IY global
 	local oldChar = Player.Character
 	if not oldChar then return end
