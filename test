@@ -9479,28 +9479,47 @@ addcmd('invisible',{'invis'},function(args, speaker)
 		end
 	end
 
-	function Respawn()
-		IsRunning = false
-		if IsInvis == true then
-			pcall(function()
-				Player.Character = Character
-				wait()
-				Character.Parent = workspace
-				Character:FindFirstChildWhichIsA'Humanoid':Destroy()
-				IsInvis = false
-				InvisibleCharacter.Parent = nil
-				invisRunning = false
-			end)
-		elseif IsInvis == false then
-			pcall(function()
-				Player.Character = Character
-				wait()
-				Character.Parent = workspace
-				Character:FindFirstChildWhichIsA'Humanoid':Destroy()
-				TurnVisible()
-			end)
-		end
+function Respawn()
+	local Player = Player -- IY global
+	local oldChar = Player.Character
+	if not oldChar then return end
+
+	local rootPart = oldChar:FindFirstChild("HumanoidRootPart")
+	while not rootPart do
+		Wait(0.1)
+		rootPart = oldChar:FindFirstChild("HumanoidRootPart")
 	end
+
+	local respawnCFrame = rootPart.CFrame
+
+	local humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
+	while not humanoid do
+		Wait(0.1)
+		humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
+	end
+
+	humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+	humanoid.Health = 0
+
+	local newChar = Player.CharacterAdded:Wait()
+	local newRoot = newChar:FindFirstChild("HumanoidRootPart")
+	while not newRoot do
+		Wait(0.1)
+		newRoot = newChar:FindFirstChild("HumanoidRootPart")
+	end
+
+	local startTime = tick()
+	local teleportThreshold = 15
+
+	while tick() - startTime < 0.4 do
+		if (newRoot.Position - respawnCFrame.Position).Magnitude > teleportThreshold then
+			newRoot.CFrame = respawnCFrame
+			startTime = tick()
+		end
+		Wait(0.1)
+	end
+end
+
 
 	local invisDied
 	invisDied = InvisibleCharacter:FindFirstChildOfClass'Humanoid'.Died:Connect(function()
