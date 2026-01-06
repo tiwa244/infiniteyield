@@ -9373,12 +9373,7 @@ end)
 
 
 addcmd("reset", {}, function(args, speaker)
-	local humanoid = speaker.Character and speaker.Character:FindFirstChildWhichIsA("Humanoid")
-	if humanoid then
-		humanoid.Health = 0
-	else
-		speaker.Character:BreakJoints()
-	end
+ NamelessRespawn(speaker)
 end)
 
 addcmd('freezeanims',{},function(args, speaker)
