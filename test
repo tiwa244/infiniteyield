@@ -9371,8 +9371,8 @@ addcmd('unmuteboombox',{},function(args, speaker)
 end)
 
 addcmd("reset", {}, function(args, speaker)
- if respawn then
-  respawn()
+ if Respawn then
+  Respawn()
   end
 end)
 
