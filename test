@@ -6511,7 +6511,7 @@ local TeleportCheck = false
 Players.LocalPlayer.OnTeleport:Connect(function(State)
 	if KeepInfYield and (not TeleportCheck) and queueteleport then
 		TeleportCheck = true
-		queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()")
+		queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/tiwa244/infiniteyield/master/source'))()")
 	end
 end)
 
@@ -9535,36 +9535,46 @@ function NamelessRespawn()
 	local oldChar = getChar()
 	if not oldChar then return end
 
-	-- get root (R15: HumanoidRootPart, R6: Torso fallback)
-	local rootPart = getRoot(oldChar) or oldChar:FindFirstChild("Torso") or oldChar:FindFirstChild("UpperTorso")
+	local rootPart = oldChar:FindFirstChild("HumanoidRootPart") 
+	                or oldChar:FindFirstChild("Torso") 
+	                or oldChar:FindFirstChild("UpperTorso")
 	while not rootPart do
 		Wait(0.1)
-		rootPart = getRoot(oldChar) or oldChar:FindFirstChild("Torso") or oldChar:FindFirstChild("UpperTorso")
+		rootPart = oldChar:FindFirstChild("HumanoidRootPart") 
+		         or oldChar:FindFirstChild("Torso") 
+		         or oldChar:FindFirstChild("UpperTorso")
 	end
 
 	local respawnCFrame = rootPart.CFrame
 
-	local humanoid = getPlrHum(oldChar)
+	local humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
 	while not humanoid do
 		Wait(0.1)
-		humanoid = getPlrHum(oldChar)
+		humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
 	end
 
-	-- kill character safely
-	humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+	# Kill old character safely ((i guess this the fix??))
 	humanoid.Health = 0
-	-- optional BreakJoints for extra safety
-	BreakJoints()
 
-	-- wait for new character
+	# wait for new character to spawn
 	local newChar = player.CharacterAdded:Wait()
-	local newRoot = getRoot(newChar) or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
+	local newRoot = newChar:FindFirstChild("HumanoidRootPart") 
+	                or newChar:FindFirstChild("Torso") 
+	                or newChar:FindFirstChild("UpperTorso")
 	while not newRoot do
 		Wait(0.1)
-		newRoot = getRoot(newChar) or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
+		newRoot = newChar:FindFirstChild("HumanoidRootPart") 
+		         or newChar:FindFirstChild("Torso") 
+		         or newChar:FindFirstChild("UpperTorso")
 	end
 
-	-- teleport back to old position
+	local newHumanoid = newChar:FindFirstChildWhichIsA("Humanoid")
+	while not newHumanoid do
+		Wait(0.1)
+		newHumanoid = newChar:FindFirstChildWhichIsA("Humanoid")
+	end
+
+	# teleport back to old position
 	local startTime = tick()
 	local teleportThreshold = 15
 	while tick() - startTime < 0.4 do
@@ -9575,7 +9585,6 @@ function NamelessRespawn()
 		Wait(0.1)
 	end
 end
-
 
 
 	local invisDied
@@ -13317,3 +13326,4 @@ task.spawn(function()
 	IntroBackground:Destroy()
 	minimizeHolder()
 end)
+⬇
