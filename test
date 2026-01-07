@@ -9527,15 +9527,7 @@ function NamelessRespawn()
 	while not newRoot do
 		Wait(0.1)
 		newRoot = getRoot(newChar) or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
-	end
-
-	-- teleport back to old position
-	local startTime = tick()
-	local teleportThreshold = 15
-	while tick() - startTime < 0.4 do
-		if (newRoot.Position - respawnCFrame.Position).Magnitude > teleportThreshold then
-			newRoot.CFrame = respawnCFrame
-			startTime = tick()
+	       end
 		end
 		Wait(0.1)
 	end
