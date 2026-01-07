@@ -4992,24 +4992,45 @@ end
 
 local refreshCmd = false
 function refresh(plr)
+	plr = plr or Players.LocalPlayer
 	refreshCmd = true
-	local root = getRoot(plr.Character)
-	local pos = root.CFrame
-	BreakJoints()
-	Humanoid.Health = 0
-	local pos1 = workspace.CurrentCamera.CFrame
+
+	local char = plr.Character
+	if not char then return end
+
+	local root = char:FindFirstChild("HumanoidRootPart") 
+	local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+	local pos = (root or torso).CFrame
+
+	local hum = char:FindFirstChildWhichIsA("Humanoid")
+	if hum then
+		hum:ChangeState(Enum.HumanoidStateType.Dead)
+		hum.Health = 0
+	end
+
+	local camPos = workspace.CurrentCamera.CFrame
+
+	-- wait for respawn
 	respawn(plr)
+
 	task.spawn(function()
-		local char = plr.CharacterAdded:Wait()
-		local humanoid = char:FindFirstChildOfClass("Humanoid")
-		while not humanoid do
+		local newChar = plr.CharacterAdded:Wait()
+		local newHum = newChar:FindFirstChildWhichIsA("Humanoid")
+		while not newHum do
 			wait()
-			humanoid = char:FindFirstChildOfClass("Humanoid")
+			newHum = newChar:FindFirstChildWhichIsA("Humanoid")
 		end
-		humanoid.RootPart.CFrame, workspace.CurrentCamera.CFrame = pos, task.wait() and pos1
+
+		local newRoot = newChar:FindFirstChild("HumanoidRootPart") or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
+		if newRoot then
+			newRoot.CFrame = pos
+			workspace.CurrentCamera.CFrame = camPos
+		end
+
 		refreshCmd = false
 	end)
 end
+
 
 local lastDeath
 
@@ -9512,34 +9533,49 @@ function Respawn()
 
 function NamelessRespawn()
 	local oldChar = getChar()
-	local rootPart = getRoot(oldChar)
-	while not rootPart do Wait(.1) rootPart=getRoot(oldChar) end
+	if not oldChar then return end
+
+	-- get root (R15: HumanoidRootPart, R6: Torso fallback)
+	local rootPart = getRoot(oldChar) or oldChar:FindFirstChild("Torso") or oldChar:FindFirstChild("UpperTorso")
+	while not rootPart do
+		Wait(0.1)
+		rootPart = getRoot(oldChar) or oldChar:FindFirstChild("Torso") or oldChar:FindFirstChild("UpperTorso")
+	end
 
 	local respawnCFrame = rootPart.CFrame
 
 	local humanoid = getPlrHum(oldChar)
-	while not humanoid do Wait(.1) humanoid=getPlrHum(oldChar) end
+	while not humanoid do
+		Wait(0.1)
+		humanoid = getPlrHum(oldChar)
+	end
+
+	-- kill character safely
 	humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-	BreakJoints()
 	humanoid.Health = 0
+	-- optional BreakJoints for extra safety
+	BreakJoints()
 
+	-- wait for new character
 	local newChar = player.CharacterAdded:Wait()
-	while not getRoot(newChar) do Wait(.1) getRoot(newChar) end
+	local newRoot = getRoot(newChar) or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
+	while not newRoot do
+		Wait(0.1)
+		newRoot = getRoot(newChar) or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
+	end
 
-	local newRoot = getRoot(newChar)
-	if newRoot then
-		local startTime = tick()
-		local teleportThreshold = 15
-
-		while tick() - startTime < 0.4 do
-			if (newRoot.Position - respawnCFrame.Position).Magnitude > teleportThreshold then
-				newRoot.CFrame = respawnCFrame
-				startTime = tick()
-			end
-			Wait(0.1)
+	-- teleport back to old position
+	local startTime = tick()
+	local teleportThreshold = 15
+	while tick() - startTime < 0.4 do
+		if (newRoot.Position - respawnCFrame.Position).Magnitude > teleportThreshold then
+			newRoot.CFrame = respawnCFrame
+			startTime = tick()
 		end
+		Wait(0.1)
 	end
 end
+
 
 
 	local invisDied
