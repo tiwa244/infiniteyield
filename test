@@ -9543,6 +9543,7 @@ end
 
 
 
+
 	function Respawn()
 		IsRunning = false
 		if IsInvis == true then
