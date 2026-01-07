@@ -9500,46 +9500,36 @@ function NamelessRespawn()
 	local oldChar = getChar()
 	if not oldChar then return end
 
-	local rootPart = oldChar:FindFirstChild("HumanoidRootPart") 
-	                or oldChar:FindFirstChild("Torso") 
-	                or oldChar:FindFirstChild("UpperTorso")
+	-- get root (R15: HumanoidRootPart, R6: Torso fallback)
+	local rootPart = getRoot(oldChar) or oldChar:FindFirstChild("Torso") or oldChar:FindFirstChild("UpperTorso")
 	while not rootPart do
 		Wait(0.1)
-		rootPart = oldChar:FindFirstChild("HumanoidRootPart") 
-		         or oldChar:FindFirstChild("Torso") 
-		         or oldChar:FindFirstChild("UpperTorso")
+		rootPart = getRoot(oldChar) or oldChar:FindFirstChild("Torso") or oldChar:FindFirstChild("UpperTorso")
 	end
 
 	local respawnCFrame = rootPart.CFrame
 
-	local humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
+	local humanoid = getPlrHum(oldChar)
 	while not humanoid do
 		Wait(0.1)
-		humanoid = oldChar:FindFirstChildWhichIsA("Humanoid")
+		humanoid = getPlrHum(oldChar)
 	end
 
-	# Kill old character safely ((i guess this the fix??))
+	-- kill character safely
+	humanoid:ChangeState(Enum.HumanoidStateType.Dead)
 	humanoid.Health = 0
+	-- optional BreakJoints for extra safety
+	BreakJoints()
 
-	# wait for new character to spawn
+	-- wait for new character
 	local newChar = player.CharacterAdded:Wait()
-	local newRoot = newChar:FindFirstChild("HumanoidRootPart") 
-	                or newChar:FindFirstChild("Torso") 
-	                or newChar:FindFirstChild("UpperTorso")
+	local newRoot = getRoot(newChar) or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
 	while not newRoot do
 		Wait(0.1)
-		newRoot = newChar:FindFirstChild("HumanoidRootPart") 
-		         or newChar:FindFirstChild("Torso") 
-		         or newChar:FindFirstChild("UpperTorso")
+		newRoot = getRoot(newChar) or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
 	end
 
-	local newHumanoid = newChar:FindFirstChildWhichIsA("Humanoid")
-	while not newHumanoid do
-		Wait(0.1)
-		newHumanoid = newChar:FindFirstChildWhichIsA("Humanoid")
-	end
-
-	# teleport back to old position
+	-- teleport back to old position
 	local startTime = tick()
 	local teleportThreshold = 15
 	while tick() - startTime < 0.4 do
@@ -9550,6 +9540,7 @@ function NamelessRespawn()
 		Wait(0.1)
 	end
 end
+
 
 
 	function Respawn()
