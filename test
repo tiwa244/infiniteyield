@@ -13326,4 +13326,3 @@ task.spawn(function()
 	IntroBackground:Destroy()
 	minimizeHolder()
 end)
-⬇
