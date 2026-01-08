@@ -4469,7 +4469,6 @@ CMDs[#CMDs + 1] = {NAME = 'disable [inventory/playerlist/chat/reset/emotes/all]'
 CMDs[#CMDs + 1] = {NAME = 'showguis', DESC = 'Shows any invisible GUIs'}
 CMDs[#CMDs + 1] = {NAME = 'unshowguis', DESC = 'Undoes showguis'}
 CMDs[#CMDs + 1] = {NAME = 'hideguis', DESC = 'Hides any GUIs in PlayerGui'}
-CMDs[#CMDs + 1] = {NAME = 'loopfling', DESC = 'Loopflinging'}
 CMDs[#CMDs + 1] = {NAME = 'unhideguis', DESC = 'Undoes hideguis'}
 CMDs[#CMDs + 1] = {NAME = 'guidelete', DESC = 'Enables backspace to delete GUI'}
 CMDs[#CMDs + 1] = {NAME = 'unguidelete / noguidelete', DESC = 'Disables guidelete'}
@@ -4957,80 +4956,51 @@ function permadeath(plr)
 end
 
 function respawn(plr)
-	plr = plr or Players.LocalPlayer
-	if not plr then return end
+	if invisRunning then TurnVisible() end
 
-	if invisRunning then
-		pcall(TurnVisible)
+	local rcdEnabled, wasHidden = false, false
+	if gethidden then
+		rcdEnabled, wasHidden = gethidden(workspace, "RejectCharacterDeletions") ~= Enum.RejectCharacterDeletions.Disabled
 	end
 
-	local char = plr.Character
-	if not char then return end
-
-	local hum = char:FindFirstChildWhichIsA("Humanoid")
-	local root = char:FindFirstChild("HumanoidRootPart")
-
-	if not hum or not root then return end
-
-	-- save position
-	local cf = root.CFrame
-
-	-- kill character (R6 + R15 safe)
-	hum:ChangeState(Enum.HumanoidStateType.Dead)
-	hum.Health = 0
-
-	-- wait for respawn
-	local newChar = plr.CharacterAdded:Wait()
-	local newRoot = newChar:WaitForChild("HumanoidRootPart", 5)
-
-	-- teleport back (optional but nameless-style)
-	if newRoot then
+	if rcdEnabled and replicatesignal then
+		replicatesignal(plr.ConnectDiedSignalBackend)
+		task.wait(Players.RespawnTime - 0.1)
+		replicatesignal(plr.Kill)
+	elseif rcdEnabled and not replicatesignal then
+		notify("Incompatible Exploit", "Your exploit does not support this command (missing replicatesignal)")
+	else
+		local char = plr.Character
+		local hum = char:FindFirstChildWhichIsA("Humanoid")
+		if hum then hum:ChangeState(Enum.HumanoidStateType.Dead) end
+		char:ClearAllChildren()
+		local newChar = Instance.new("Model")
+		newChar.Parent = workspace
+		plr.Character = newChar
 		task.wait()
-		newRoot.CFrame = cf
+		plr.Character = char
+		newChar:Destroy()
 	end
 end
 
 local refreshCmd = false
 function refresh(plr)
-	plr = plr or Players.LocalPlayer
 	refreshCmd = true
-
-	local char = plr.Character
-	if not char then return end
-
-	local root = char:FindFirstChild("HumanoidRootPart") 
-	local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-	local pos = (root or torso).CFrame
-
-	local hum = char:FindFirstChildWhichIsA("Humanoid")
-	if hum then
-		hum:ChangeState(Enum.HumanoidStateType.Dead)
-		hum.Health = 0
-	end
-
-	local camPos = workspace.CurrentCamera.CFrame
-
-	-- wait for respawn
+	local root = getRoot(plr.Character)
+	local pos = root.CFrame
+	local pos1 = workspace.CurrentCamera.CFrame
 	respawn(plr)
-
 	task.spawn(function()
-		local newChar = plr.CharacterAdded:Wait()
-		local newHum = newChar:FindFirstChildWhichIsA("Humanoid")
-		while not newHum do
+		local char = plr.CharacterAdded:Wait()
+		local humanoid = char:FindFirstChildOfClass("Humanoid")
+		while not humanoid do
 			wait()
-			newHum = newChar:FindFirstChildWhichIsA("Humanoid")
+			humanoid = char:FindFirstChildOfClass("Humanoid")
 		end
-
-		local newRoot = newChar:FindFirstChild("HumanoidRootPart") or newChar:FindFirstChild("Torso") or newChar:FindFirstChild("UpperTorso")
-		if newRoot then
-			newRoot.CFrame = pos
-			workspace.CurrentCamera.CFrame = camPos
-		end
-
+		humanoid.RootPart.CFrame, workspace.CurrentCamera.CFrame = pos, task.wait() and pos1
 		refreshCmd = false
 	end)
 end
-
 
 local lastDeath
 
@@ -9384,8 +9354,7 @@ addcmd('unmuteboombox',{},function(args, speaker)
 end)
 
 addcmd("reset", {}, function(args, speaker)
- if NamelessRespawn then
-  NamelessRespawn(speaker)
+ NamelessRespawn(speaker)
 end)
 
 addcmd('freezeanims',{},function(args, speaker)
@@ -9535,7 +9504,6 @@ function NamelessRespawn()
 		Wait(0.1)
 	end
 end
-
 
 	function Respawn()
 		IsRunning = false
@@ -11819,6 +11787,35 @@ addcmd('fling',{},function(args, speaker)
         Root.CFrame = oldCF
         task.wait()
     until (Root.Position - oldCF.Position).Magnitude < 10
+end)
+
+addcmd('unfling',{'nofling'},function(args, speaker)
+	execCmd('clip')
+	if flingDied then
+		flingDied:Disconnect()
+	end
+	flinging = false
+	wait(.1)
+	local speakerChar = speaker.Character
+	if not speakerChar or not getRoot(speakerChar) then return end
+	for i,v in pairs(getRoot(speakerChar):GetChildren()) do
+		if v.ClassName == 'BodyAngularVelocity' then
+			v:Destroy()
+		end
+	end
+	for _, child in pairs(speakerChar:GetDescendants()) do
+		if child.ClassName == "Part" or child.ClassName == "MeshPart" then
+			child.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+		end
+	end
+end)
+
+addcmd('togglefling',{},function(args, speaker)
+	if flinging then
+		execCmd('unfling')
+	else
+		execCmd('fling')
+	end
 end)
 
 addcmd('unfling',{'nofling'},function(args, speaker)
