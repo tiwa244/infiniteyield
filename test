@@ -11735,86 +11735,40 @@ end)
 
 flinging = false
 addcmd('fling',{},function(args, speaker)
-   local Players = game:GetService("Players")
-    local LocalPlayer = speaker
-    local Character = LocalPlayer.Character
-    if not Character then return end
-
-    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-    local Root = Character:FindFirstChild("HumanoidRootPart")
-    if not Humanoid or not Root then return end
-
-    local function getPlayer(name)
-        name = string.lower(name)
-        if name == "all" then
-            local t = {}
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer then
-                    table.insert(t, p)
-                end
-            end
-            return t
-        elseif name == "random" then
-            local list = Players:GetPlayers()
-            table.remove(list, table.find(list, LocalPlayer))
-            return { list[math.random(#list)] }
-        end
-
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                if string.sub(string.lower(p.Name), 1, #name) == name
-                or string.sub(string.lower(p.DisplayName), 1, #name) == name then
-                    return { p }
-                end
-            end
-        end
-        return {}
-    end
-
-    local targets = getPlayer(args[1] or "")
-    if #targets == 0 then return end
-
-    local oldCF = Root.CFrame
-    local oldDestroy = workspace.FallenPartsDestroyHeight
-    workspace.FallenPartsDestroyHeight = 0/0
-
-    local bv = Instance.new("BodyVelocity")
-    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-    bv.Velocity = Vector3.new(9e8, 9e8, 9e8)
-    bv.Parent = Root
-
-    for _, target in ipairs(targets) do
-        local tChar = target.Character
-        if not tChar then continue end
-
-        local tHum = tChar:FindFirstChildOfClass("Humanoid")
-        local tRoot = tChar:FindFirstChild("HumanoidRootPart")
-        local tHead = tChar:FindFirstChild("Head")
-
-        local part = tRoot or tHead
-        if not part then continue end
-
-        local start = tick()
-        while tick() - start < 2 do
-            Root.CFrame =
-                part.CFrame *
-                CFrame.new(0, 1.5, 0) *
-                CFrame.Angles(math.rad(math.random(0,360)), 0, 0)
-
-            Root.Velocity = Vector3.new(9e7, 9e7, 9e7)
-            Root.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
-            task.wait()
-        end
-    end
-
-    bv:Destroy()
-    workspace.FallenPartsDestroyHeight = oldDestroy
-
-    -- restore position
-    repeat
-        Root.CFrame = oldCF
-        task.wait()
-    until (Root.Position - oldCF.Position).Magnitude < 10
+	flinging = false
+	for _, child in pairs(speaker.Character:GetDescendants()) do
+		if child:IsA("BasePart") then
+			child.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0.5)
+		end
+	end
+	execCmd('noclip')
+	wait(.1)
+	local bambam = Instance.new("BodyAngularVelocity")
+	bambam.Name = randomString()
+	bambam.Parent = getRoot(speaker.Character)
+	bambam.AngularVelocity = Vector3.new(0,99999,0)
+	bambam.MaxTorque = Vector3.new(0,math.huge,0)
+	bambam.P = math.huge
+	local Char = speaker.Character:GetChildren()
+	for i, v in next, Char do
+		if v:IsA("BasePart") then
+			v.CanCollide = false
+			v.Massless = true
+			v.Velocity = Vector3.new(0, 0, 0)
+		end
+	end
+	flinging = true
+	local function flingDiedF()
+		execCmd('unfling')
+		execCmd('unnoclip')
+	end
+	flingDied = speaker.Character:FindFirstChildOfClass('Humanoid').Died:Connect(flingDiedF)
+	repeat
+		bambam.AngularVelocity = Vector3.new(0,99999,0)
+		wait(.2)
+		bambam.AngularVelocity = Vector3.new(0,0,0)
+		wait(.1)
+	until flinging == false
 end)
 
 addcmd('unfling',{'nofling'},function(args, speaker)
