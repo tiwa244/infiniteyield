@@ -4480,6 +4480,8 @@ CMDs[#CMDs + 1] = {NAME = 'togglekeepiy', DESC = 'Toggles keepiy'}
 CMDs[#CMDs + 1] = {NAME = 'removeads / adblock', DESC = 'Automatically removes ad billboards'}
 CMDs[#CMDs + 1] = {NAME = 'savegame / saveplace', DESC = 'Uses saveinstance to save the game'}
 CMDs[#CMDs + 1] = {NAME = 'clearerror', DESC = 'Clears the annoying box and blur when a game kicks you'}
+CMDs[#CMDs + 1] = {NAME = 'antigameplaypaused', DESC = 'Clears the annoying box shown when a game is loading assets due to network lag'}
+CMDs[#CMDs + 1] = {NAME = 'unantigameplaypaused', DESC = 'Disables antigameplaypaused'}
 CMDs[#CMDs + 1] = {NAME = 'clientantikick / antikick (CLIENT)', DESC = 'Prevents localscripts from kicking you'}
 CMDs[#CMDs + 1] = {NAME = 'clientantiteleport / antiteleport (CLIENT)', DESC = 'Prevents localscripts from teleporting you'}
 CMDs[#CMDs + 1] = {NAME = 'allowrejoin / allowrj [true/false] (CLIENT)', DESC = 'Changes if antiteleport allows you to rejoin or not'}
@@ -4570,7 +4572,6 @@ CMDs[#CMDs + 1] = {NAME = 'logs', DESC = 'Opens the logs GUI'}
 CMDs[#CMDs + 1] = {NAME = 'chatlogs / clogs', DESC = 'Log what people say or whisper'}
 CMDs[#CMDs + 1] = {NAME = 'joinlogs / jlogs', DESC = 'Log when people join'}
 CMDs[#CMDs + 1] = {NAME = 'chatlogswebhook / logswebhook [url]', DESC = 'Set a discord webhook for chatlogs to go to (provide no url to disable this)'}
-CMDs[#CMDs + 1] = {NAME = 'antichatlogs / antichatlogger', DESC = 'Prevents Roblox from banning you for your silly chat messages (game needs the legacy chat)'}
 CMDs[#CMDs + 1] = {NAME = 'chat / say [text]', DESC = 'Makes you chat a string (possible mute bypass)'}
 CMDs[#CMDs + 1] = {NAME = 'spam [text]', DESC = 'Makes you spam the chat'}
 CMDs[#CMDs + 1] = {NAME = 'unspam', DESC = 'Turns off spam'}
@@ -4582,6 +4583,7 @@ CMDs[#CMDs + 1] = {NAME = 'bubblechat (CLIENT)', DESC = 'Enables bubble chat for
 CMDs[#CMDs + 1] = {NAME = 'unbubblechat / nobubblechat', DESC = 'Disables the bubblechat command'}
 CMDs[#CMDs + 1] = {NAME = 'chatwindow', DESC = 'Enables the chat window for your client'}
 CMDs[#CMDs + 1] = {NAME = 'unchatwindow / nochatwindow', DESC = 'Disables the chat window for your client'}
+CMDs[#CMDs + 1] = {NAME = 'darkchat', DESC = 'Makes the chat window dark for your client'}
 CMDs[#CMDs + 1] = {NAME = 'listento [player]', DESC = 'Listens to the area around a player. Can also eavesdrop with vc'}
 CMDs[#CMDs + 1] = {NAME = 'unlistento', DESC = 'Disables listento'}
 CMDs[#CMDs + 1] = {NAME = 'muteallvoices / muteallvcs', DESC = 'Mutes voice chat for all players'}
@@ -7826,8 +7828,22 @@ addcmd("savegame", {"saveplace"}, function(args, speaker)
 	end
 end)
 
-addcmd('clearerror',{'clearerrors'},function(args, speaker)
-	GuiService:ClearError()
+addcmd("clearerror", {"clearerrors"}, function(args, speaker)
+    GuiService:ClearError()
+end)
+
+addcmd("antigameplaypaused", {}, function(args, speaker)
+    pcall(function() networkPaused:Disconnect() end)
+    networkPaused = COREGUI.RobloxGui.ChildAdded:Connect(function(obj)
+        if obj.Name == "CoreScripts/NetworkPause" then
+            obj:Destroy()
+        end
+    end)
+    COREGUI.RobloxGui["CoreScripts/NetworkPause"]:Destroy()
+end)
+
+addcmd("unantigameplaypaused", {}, function(args, speaker)
+    networkPaused:Disconnect()
 end)
 
 addcmd('clientantikick',{'antikick'},function(args, speaker)
@@ -10656,6 +10672,36 @@ addcmd("unchatwindow", {"nochatwindow"}, function(args, speaker)
 	TextChatService.ChatWindowConfiguration.Enabled = false
 end)
 
+addcmd("darkchat", {}, function(args, speaker)
+    local BCC = TextChatService:FindFirstChildOfClass("BubbleChatConfiguration")
+    local CWC = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
+    local CIBC = TextChatService:FindFirstChildOfClass("ChatInputBarConfiguration")
+    if BCC then
+        BCC.Enabled = true
+        BCC.BackgroundColor3 = Color3.fromRGB()
+        BCC.BackgroundTransparency = 0.3
+        BCC.TailVisible = true
+        BCC.TextColor3 = Color3.fromRGB(0xFF, 0xFF, 0xFF)
+    end
+    if CWC then
+        CWC.Enabled = true
+        CWC.BackgroundColor3 = Color3.fromRGB()
+        CWC.BackgroundTransparency = 0.3
+        CWC.TextColor3 = Color3.fromRGB(0xFF, 0xFF, 0xFF)
+        CWC.TextStrokeColor3 = Color3.fromRGB()
+        CWC.TextStrokeTransparency = 0.5
+    end
+    if CIBC then
+        CIBC.Enabled = true
+        CIBC.BackgroundColor3 = Color3.fromRGB()
+        CIBC.BackgroundTransparency = 0.5
+        CIBC.PlaceholderColor3 = Color3.fromRGB(0xFF, 0xFF, 0xFF)
+        CIBC.TextColor3 = Color3.fromRGB(0xFF, 0xFF, 0xFF)
+        CIBC.TextStrokeColor3 = Color3.fromRGB()
+        CIBC.TextStrokeTransparency = 0.5
+    end
+end)
+
 addcmd('blockhead',{},function(args, speaker)
 	speaker.Character.Head:FindFirstChildOfClass("SpecialMesh"):Destroy()
 end)
@@ -11645,26 +11691,6 @@ addcmd("chatlogswebhook", {"logswebhook"}, function(args, speaker)
 	end
 	logsWebhook = args[1] or nil
 	updatesaves()
-end)
-
-addcmd("antichatlogs", {"antichatlogger"}, function(args, speaker)
-	if not isLegacyChat then
-		return notify("antichatlogs", "Game needs the legacy chat")
-	end
-	local MessagePosted, _ = pcall(function()
-		rawset(require(speaker:FindFirstChild("PlayerScripts"):FindFirstChild("ChatScript").ChatMain), "MessagePosted", {
-			["fire"] = function(msg)
-				return msg
-			end,
-			["wait"] = function()
-				return
-			end,
-			["connect"] = function()
-				return
-			end
-		})
-	end)
-	notify("antichatlogs", MessagePosted and "Enabled" or "Failed to enable antichatlogs")
 end)
 
 flinging = false
@@ -12927,6 +12953,12 @@ end)
 
 addcmd('removecmd',{'deletecmd'},function(args, speaker)
 	removecmd(args[1])
+end)
+
+addcmd("debug", {}, function(args, speaker)
+    local opt = parseBoolean(args[1], true)
+    _G.IY_DEBUG = opt
+    notify("debug", tostring(opt), 1)
 end)
 
 if IsOnMobile then
