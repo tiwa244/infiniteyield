@@ -8128,16 +8128,98 @@ local Players = game:GetService("Players")
 end)
 
 addcmd('espteam',{},function(args, speaker)
-	if not CHMSenabled then
-		ESPenabled = true
-		for i,v in pairs(Players:GetPlayers()) do
-			if v.Name ~= speaker.Name then
-				ESP(v, true)
-			end
-		end
-	else
-		notify('ESP','Disable chams (nochams) before using esp')
-	end
+local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local localPlayer = Players.LocalPlayer
+    
+    local HIGHLIGHT_TAG = "Team_ESP"
+    local GUI_TAG = "ESP_Stats"
+    _G.ESP_ENABLED = true
+
+    local function clearESP()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then
+                local h = p.Character:FindFirstChild(HIGHLIGHT_TAG)
+                local g = p.Character:FindFirstChild(GUI_TAG)
+                if h then h:Destroy() end
+                if g then g:Destroy() end
+            end
+        end
+    end
+
+    local function createESP(player)
+        if player == localPlayer then return end
+
+        local function setupCharacter(character)
+            if not character then return end
+            local head = character:WaitForChild("Head", 15)
+            local hum = character:WaitForChild("Humanoid", 15)
+            if not head or not hum then return end
+
+            -- 1. TEAM COLOR HIGHLIGHT
+            local hl = character:FindFirstChild(HIGHLIGHT_TAG) or Instance.new("Highlight")
+            hl.Name = HIGHLIGHT_TAG
+            hl.FillTransparency = 0.5
+            hl.OutlineTransparency = 0
+            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            hl.Parent = character
+
+            -- 2. STATS OVERHEAD (White Text)
+            local bgui = character:FindFirstChild(GUI_TAG) or Instance.new("BillboardGui")
+            bgui.Name = GUI_TAG
+            bgui.Adornee = head
+            bgui.Size = UDim2.new(0, 300, 0, 50)
+            bgui.StudsOffset = Vector3.new(0, 4, 0)
+            bgui.AlwaysOnTop = true
+            
+            local textLabel = bgui:FindFirstChild("Info") or Instance.new("TextLabel")
+            textLabel.Name = "Info"
+            textLabel.BackgroundTransparency = 1
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            textLabel.TextStrokeTransparency = 0 
+            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+            textLabel.Font = Enum.Font.RobotoMono
+            textLabel.TextSize = 16
+            textLabel.Parent = bgui
+            bgui.Parent = character
+
+            -- 3. THE UPDATE LOOP (Tracks Team Changes + Stats)
+            local connection
+            connection = RunService.RenderStepped:Connect(function()
+                if not character.Parent or not _G.ESP_ENABLED then
+                    connection:Disconnect()
+                    if hl then hl:Destroy() end
+                    if bgui then bgui:Destroy() end
+                    return
+                end
+                
+                -- Dynamic Team Color Update
+                -- We use .Color to convert BrickColor to Color3
+                local teamColor = player.TeamColor.Color
+                hl.FillColor = teamColor
+                hl.OutlineColor = teamColor
+                
+                -- Distance Calc
+                local dist = 0
+                if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    dist = (character.HumanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude
+                end
+                
+                -- KEEPING YOUR TEXT FORMAT EXACTLY THE SAME:
+                textLabel.Text = string.format("%s | %d HP | %d Studs", player.Name, math.floor(hum.Health), math.floor(dist))
+            end)
+        end
+
+        player.CharacterAdded:Connect(setupCharacter)
+        if player.Character then setupCharacter(player.Character) end
+    end
+
+    clearESP()
+    for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
+    
+    if _G.ESP_PlayerAdded then _G.ESP_PlayerAdded:Disconnect() end
+    _G.ESP_PlayerAdded = Players.PlayerAdded:Connect(createESP)
 end)
 
 addcmd('noesp',{'unesp','unespteam'},function(args, speaker)
