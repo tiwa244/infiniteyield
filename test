@@ -146,7 +146,7 @@ if makefolder and isfolder and writefile and isfile then
 	end)
 end
 
-currentVersion = "6.3.6"
+currentVersion = "6.4"
 
 ScaledHolder = Instance.new("Frame")
 Scale = Instance.new("UIScale")
@@ -2091,6 +2091,15 @@ function r15(plr)
 	end
 end
 
+function breakVelocity()
+    local V3 = Vector3.new(0, 0, 0)
+    for _, v in ipairs(Players.LocalPlayer.Character:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Velocity, v.RotVelocity = V3, V3
+        end
+    end
+end
+
 function toClipboard(txt)
 	if everyClipboard then
 		everyClipboard(tostring(txt)) -- some executor errored without tostring btw so dont call me out for this
@@ -2949,8 +2958,8 @@ useFactorySettings = function()
 	PluginsTable = {}
 end
 
-createPopup = function(text)
-	local FileError = Instance.new("Frame")
+function createPopup(title, text)
+	local Popup = Instance.new("Frame")
 	local background = Instance.new("Frame")
 	local Directions = Instance.new("TextLabel")
 	local shadow = Instance.new("Frame")
@@ -2958,16 +2967,16 @@ createPopup = function(text)
 	local Exit = Instance.new("TextButton")
 	local ExitImage = Instance.new("ImageLabel")
 
-	FileError.Name = randomString()
-	FileError.Parent = ScaledHolder
-	FileError.Active = true
-	FileError.BackgroundTransparency = 1
-	FileError.Position = UDim2.new(0.5, -180, 0, 290)
-	FileError.Size = UDim2.new(0, 360, 0, 20)
-	FileError.ZIndex = 10
+	Popup.Name = randomString()
+	Popup.Parent = ScaledHolder
+	Popup.Active = true
+	Popup.BackgroundTransparency = 1
+	Popup.Position = UDim2.new(0.5, -180, 0, -500)
+	Popup.Size = UDim2.new(0, 360, 0, 20)
+	Popup.ZIndex = 10
 
 	background.Name = "background"
-	background.Parent = FileError
+	background.Parent = Popup
 	background.Active = true
 	background.BackgroundColor3 = Color3.fromRGB(36, 36, 37)
 	background.BorderSizePixel = 0
@@ -2991,7 +3000,7 @@ createPopup = function(text)
 	Directions.ZIndex = 10
 
 	shadow.Name = "shadow"
-	shadow.Parent = FileError
+	shadow.Parent = Popup
 	shadow.BackgroundColor3 = Color3.fromRGB(46, 46, 47)
 	shadow.BorderSizePixel = 0
 	shadow.Size = UDim2.new(0, 360, 0, 20)
@@ -3004,7 +3013,7 @@ createPopup = function(text)
 	PopupText.ZIndex = 10
 	PopupText.Font = Enum.Font.SourceSans
 	PopupText.TextSize = 14
-	PopupText.Text = "File Error"
+	PopupText.Text = title
 	PopupText.TextColor3 = Color3.new(1, 1, 1)
 	PopupText.TextWrapped = true
 
@@ -3024,8 +3033,12 @@ createPopup = function(text)
 	ExitImage.Image = getcustomasset("infiniteyield/assets/close.png")
 	ExitImage.ZIndex = 10
 
+	Popup:TweenPosition(UDim2.new(0.5, -180, 0, 150), "InOut", "Quart", 0.5, true, nil)
+
 	Exit.MouseButton1Click:Connect(function()
-		FileError:Destroy()
+		Popup:TweenPosition(UDim2.new(0.5, -180, 0, -500), "InOut", "Quart", 0.5, true, nil)
+		task.wait(0.6)
+		Popup:Destroy()
 	end)
 end
 
@@ -3076,7 +3089,7 @@ function saves()
 				else
 					nosaves = true
 					useFactorySettings()
-					createPopup("There was a problem writing a save file to your PC.\n\nPlease contact the developer/support team for your exploit and tell them writefile/readfile is not working.\n\nYour settings, keybinds, waypoints, and aliases will not save if you continue.\n\nThings to try:\n> Make sure a 'workspace' folder is located in the same folder as your exploit\n> If your exploit is inside of a zip/rar file, extract it.\n> Rejoin the game and try again or restart your PC and try again.")
+					createPopup("File Error", "There was a problem writing a save file to your PC.\n\nPlease contact the developer/support team for your exploit and tell them writefile/readfile is not working.\n\nYour settings, keybinds, waypoints, and aliases will not save if you continue.\n\nThings to try:\n> Make sure a 'workspace' folder is located in the same folder as your exploit\n> If your exploit is inside of a zip/rar file, extract it.\n> Rejoin the game and try again or restart your PC and try again.")
 				end
 			end
 		else
@@ -3088,14 +3101,14 @@ function saves()
 			else
 				nosaves = true
 				useFactorySettings()
-				createPopup("There was a problem writing a save file to your PC.\n\nPlease contact the developer/support team for your exploit and tell them writefile/readfile is not working.\n\nYour settings, keybinds, waypoints, and aliases will not save if you continue.\n\nThings to try:\n> Make sure a 'workspace' folder is located in the same folder as your exploit\n> If your exploit is inside of a zip/rar file, extract it.\n> Rejoin the game and try again or restart your PC and try again.")
+				createPopup("File Error", "There was a problem writing a save file to your PC.\n\nPlease contact the developer/support team for your exploit and tell them writefile/readfile is not working.\n\nYour settings, keybinds, waypoints, and aliases will not save if you continue.\n\nThings to try:\n> Make sure a 'workspace' folder is located in the same folder as your exploit\n> If your exploit is inside of a zip/rar file, extract it.\n> Rejoin the game and try again or restart your PC and try again.")
 			end
 		end
 	else
 		if jsonAttempts >= 10 then
 			nosaves = true
 			useFactorySettings()
-			createPopup("Sorry, we have attempted to parse your save file, but it is unreadable!\n\nInfinite Yield is now using factory settings until your exploit's file system works.\n\nYour save file has not been deleted.")
+			createPopup("File Error", "Sorry, we have attempted to parse your save file, but it is unreadable!\n\nInfinite Yield is now using factory settings until your exploit's file system works.\n\nYour save file has not been deleted.")
 		else
 			nosaves = true
 			useFactorySettings()
@@ -4556,6 +4569,7 @@ CMDs[#CMDs + 1] = {NAME = 'tpposition / tppos [X Y Z]', DESC = 'Teleports you to
 CMDs[#CMDs + 1] = {NAME = 'tweentpposition / ttppos [X Y Z]', DESC = 'Tween to coordinates (bypasses some anti cheats)'}
 CMDs[#CMDs + 1] = {NAME = 'offset [X Y Z]', DESC = 'Offsets you by certain coordinates'}
 CMDs[#CMDs + 1] = {NAME = 'tweenoffset / toffset [X Y Z]', DESC = 'Tween offset (bypasses some anti cheats)'}
+CMDs[#CMDs + 1] = {NAME = 'thru [num]', DESC = 'Teleports you [num] studs ahead of where your character is facing'}
 CMDs[#CMDs + 1] = {NAME = 'notifyposition / notifypos [player]', DESC = 'Notifies you the coordinates of a character'}
 CMDs[#CMDs + 1] = {NAME = 'copyposition / copypos [player]', DESC = 'Copies the coordinates of a character to your clipboard'}
 CMDs[#CMDs + 1] = {NAME = 'walktoposition / walktopos [X Y Z]', DESC = 'Makes you walk to a coordinate'}
@@ -4645,6 +4659,8 @@ CMDs[#CMDs + 1] = {NAME = 'tweengotopart / tgotopart [part name]', DESC = 'Tween
 CMDs[#CMDs + 1] = {NAME = 'gotopartclass / gpc [class name]', DESC = 'Moves your character to a part or multiple parts based on classname'}
 CMDs[#CMDs + 1] = {NAME = 'tweengotopartclass / tgpc [class name]', DESC = 'Tweens your character to a part or multiple parts based on classname'}
 CMDs[#CMDs + 1] = {NAME = 'gotomodel [part name]', DESC = 'Moves your character to a model or multiple models'}
+CMDs[#CMDs + 1] = {NAME = 'esp2', DESC = 'View all players and their status with a rainbow highlight'}
+CMDs[#CMDs + 1] = {NAME = 'unesp', DESC = 'Removes esp2'}
 CMDs[#CMDs + 1] = {NAME = 'tweengotomodel / tgotomodel [part name]', DESC = 'Tweens your character to a model or multiple models'}
 CMDs[#CMDs + 1] = {NAME = 'gotopartdelay / gotomodeldelay [num]', DESC = 'Adjusts how quickly you teleport to each part (default is 0.1)'}
 CMDs[#CMDs + 1] = {NAME = 'bringpart [part name] (CLIENT)', DESC = 'Moves a part or multiple parts to your character'}
@@ -4714,6 +4730,7 @@ CMDs[#CMDs + 1] = {NAME = 'rolewatchstop / unrolewatch', DESC = 'Disable Rolewat
 CMDs[#CMDs + 1] = {NAME = 'rolewatchleave', DESC = 'Toggle if you should leave the game if someone from a watched group joins the server'}
 CMDs[#CMDs + 1] = {NAME = 'staffwatch', DESC = 'Notify if a staff member of the game joins the server'}
 CMDs[#CMDs + 1] = {NAME = 'unstaffwatch', DESC = 'Disable Staffwatch'}
+CMDs[#CMDs + 1] = {NAME = 'findfriendgroups', DESC = 'Notifies you if any players are friends with each other'}
 CMDs[#CMDs + 1] = {NAME = 'handlekill / hkill [player] [radius] (TOOL)', DESC = 'Kills a player using tool damage (YOU NEED A TOOL)'}
 CMDs[#CMDs + 1] = {NAME = 'fling', DESC = 'Flings anyone you touch'}
 CMDs[#CMDs + 1] = {NAME = 'unfling', DESC = 'Disables the fling command'}
@@ -6282,6 +6299,7 @@ local function clicktpFunc()
 		) * CFrame.Angles(0, math.pi, 0)
 
 		rootPart.CFrame = newCFrame + Vector3.new(0, hipHeight or 4, 0)
+		breakVelocity()
 	end)
 end
 
@@ -8052,9 +8070,11 @@ addcmd('noesp',{'unesp','unespteam'},function(args, speaker)
 	end
 end)
 
-addcmd('esptransparency',{},function(args, speaker)
-	espTransparency = (args[1] and isNumber(args[1]) and args[1]) or 0.3
-	updatesaves()
+addcmd("esptransparency", {}, function(args, speaker)
+    espTransparency = tonumber(args[1]) or 0.3
+    if ESPenabled then execCmd("esp") end
+    if CHMSenabled then execCmd("chams") end
+    updatesaves()
 end)
 
 local espParts = {}
@@ -9385,6 +9405,100 @@ addcmd("reset", {}, function(args, speaker)
  NamelessRespawn(speaker)
 end)
 
+addcmd("esp2", {}, function(args, speaker)
+local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local localPlayer = Players.LocalPlayer
+    
+    local HIGHLIGHT_TAG = "Rainbow_ESP"
+    local GUI_TAG = "ESP_Stats"
+    _G.ESP_ENABLED = true -- Using a global so we can toggle it off from other commands
+
+    -- Function to clear existing ESP (Preventing stacking)
+    local function clearESP()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then
+                local h = p.Character:FindFirstChild(HIGHLIGHT_TAG)
+                local g = p.Character:FindFirstChild(GUI_TAG)
+                if h then h:Destroy() end
+                if g then g:Destroy() end
+            end
+        end
+    end
+
+    local function createESP(player)
+        if player == localPlayer then return end
+
+        local function setupCharacter(character)
+            if not character then return end
+            local head = character:WaitForChild("Head", 15)
+            local hum = character:WaitForChild("Humanoid", 15)
+            if not head or not hum then return end
+
+            -- 1. RAINBOW HIGHLIGHT
+            local hl = character:FindFirstChild(HIGHLIGHT_TAG) or Instance.new("Highlight")
+            hl.Name = HIGHLIGHT_TAG
+            hl.FillTransparency = 0.5
+            hl.OutlineTransparency = 0
+            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            hl.Parent = character
+
+            -- 2. STATS OVERHEAD
+            local bgui = character:FindFirstChild(GUI_TAG) or Instance.new("BillboardGui")
+            bgui.Name = GUI_TAG
+            bgui.Adornee = head
+            bgui.Size = UDim2.new(0, 300, 0, 50)
+            bgui.StudsOffset = Vector3.new(0, 4, 0)
+            bgui.AlwaysOnTop = true
+            
+            local textLabel = bgui:FindFirstChild("Info") or Instance.new("TextLabel")
+            textLabel.Name = "Info"
+            textLabel.BackgroundTransparency = 1
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            textLabel.TextStrokeTransparency = 0
+            textLabel.Font = Enum.Font.RobotoMono
+            textLabel.TextSize = 16
+            textLabel.Parent = bgui
+            bgui.Parent = character
+
+            -- 3. THE UPDATE LOOP
+            local connection
+            connection = RunService.RenderStepped:Connect(function()
+                if not character.Parent or not _G.ESP_ENABLED then
+                    connection:Disconnect()
+                    if hl then hl:Destroy() end
+                    if bgui then bgui:Destroy() end
+                    return
+                end
+                
+                local hue = os.clock() % 4 / 4 
+                local rainbow = Color3.fromHSV(hue, 0.8, 1)
+                hl.FillColor = rainbow
+                hl.OutlineColor = rainbow
+                
+                local dist = 0
+                if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    dist = (character.HumanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude
+                end
+                
+                textLabel.Text = string.format("%s | %d HP | %d Studs", player.Name, math.floor(hum.Health), math.floor(dist))
+            end)
+        end
+
+        player.CharacterAdded:Connect(setupCharacter)
+        if player.Character then setupCharacter(player.Character) end
+    end
+
+    -- Run
+    clearESP()
+    for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
+    
+    -- Using a unique connection to prevent duplicates
+    if _G.ESP_PlayerAdded then _G.ESP_PlayerAdded:Disconnect() end
+    _G.ESP_PlayerAdded = Players.PlayerAdded:Connect(createESP)
+end)
+
 addcmd('freezeanims',{},function(args, speaker)
 	local Humanoid = speaker.Character:FindFirstChildOfClass("Humanoid") or speaker.Character:FindFirstChildOfClass("AnimationController")
 	local ActiveTracks = Humanoid:GetPlayingAnimationTracks()
@@ -9399,6 +9513,10 @@ addcmd('unfreezeanims',{},function(args, speaker)
 	for _, v in pairs(ActiveTracks) do
 		v:AdjustSpeed(1)
 	end
+end)
+
+addcmd('unesp2', {}, function(args, speaker)
+	_G.ESP_ENABLED = false
 end)
 
 addcmd("respawn", {}, function(args, speaker)
@@ -10187,51 +10305,53 @@ addcmd('tweentpposition',{'ttppos'},function(args, speaker)
 	end
 end)
 
-addcmd('offset',{},function(args, speaker)
-	if #args < 3 then
-		return 
-	end
-	if speaker.Character then
-		speaker.Character:TranslateBy(Vector3.new(tonumber(args[1]) or 0, tonumber(args[2]) or 0, tonumber(args[3]) or 0))
-	end
+addcmd("offset", {}, function(args, speaker)
+    if #args < 3 then return end
+    speaker.Character:TranslateBy(Vector3.new(tonumber(args[1]) or 0, tonumber(args[2]) or 0, tonumber(args[3]) or 0))
 end)
 
-addcmd('tweenoffset',{'toffset'},function(args, speaker)
-	if #args < 3 then return end
-	local tpX,tpY,tpZ = tonumber(args[1]),tonumber(args[2]),tonumber(args[3])
-	local char = speaker.Character
-	if char and getRoot(char) then
-		TweenService:Create(getRoot(speaker.Character), TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear), {CFrame = CFrame.new(tpX,tpY,tpZ)}):Play()
-	end
+addcmd("tweenoffset", {"toffset"}, function(args, speaker)
+    if #args < 3 then return end
+    local tpX, tpY, tpZ = tonumber(args[1]), tonumber(args[2]), tonumber(args[3])
+    local root = getRoot(speaker.Character)
+    local pos = root.Position + Vector3.new(tpX, tpY, tpZ)
+    TweenService:Create(root, TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)}):Play()
+    breakVelocity()
 end)
 
-addcmd('clickteleport',{},function(args, speaker)
-	if speaker == Players.LocalPlayer then
-		notify('Click TP','Go to Settings > Keybinds > Add to set up click teleport')
-	end
+addcmd("clickteleport", {}, function(args, speaker)
+    if speaker ~= Players.LocalPlayer then return end
+    notify("Click TP", "Go to Settings > Keybinds > Add to set up click teleport")
 end)
 
 addcmd("mouseteleport", {"mousetp"}, function(args, speaker)
-	local root = getRoot(speaker.Character)
-	local pos = IYMouse.Hit
-	if root and pos then
-		root.CFrame = CFrame.new(pos.X, pos.Y + 3, pos.Z, select(4, root.CFrame:components()))
-	end
+    local root = getRoot(speaker.Character)
+    local pos = IYMouse.Hit
+    if root and pos then
+        root.CFrame = CFrame.new(pos.X, pos.Y + 3, pos.Z, select(4, root.CFrame:components()))
+        breakVelocity()
+    end
 end)
 
-addcmd('tptool', {'teleporttool'}, function(args, speaker)
-	local TpTool = Instance.new("Tool")
-	TpTool.Name = "Teleport Tool"
-	TpTool.RequiresHandle = false
-	TpTool.Parent = speaker.Backpack
-	TpTool.Activated:Connect(function()
-		local Char = speaker.Character or workspace:FindFirstChild(speaker.Name)
-		local HRP = getRoot(Char)
-		if not Char or not HRP then
-			return warn("Failed to find HumanoidRootPart")
-		end
-		HRP.CFrame = CFrame.new(IYMouse.Hit.X, IYMouse.Hit.Y + 3, IYMouse.Hit.Z, select(4, HRP.CFrame:components()))
-	end)
+addcmd("tptool", {"teleporttool"}, function(args, speaker)
+    local TpTool = Instance.new("Tool")
+    TpTool.Name = "Teleport Tool"
+    TpTool.RequiresHandle = false
+    TpTool.Parent = speaker:FindFirstChildOfClass("Backpack")
+    TpTool.Activated:Connect(function()
+        local root = getRoot(speaker.Character)
+        local pos = IYMouse.Hit
+        if not root or not pos then return end
+        root.CFrame = CFrame.new(pos.X, pos.Y + 3, pos.Z, select(4, root.CFrame:components()))
+        breakVelocity()
+    end)
+end)
+
+addcmd("thru", {}, function(args, speaker)
+    local root = getRoot(speaker.Character)
+    local num = tonumber(args[1]) or 5
+    local pos = root.CFrame.Position + (root.CFrame.LookVector * num)
+    root.CFrame = CFrame.new(pos, pos + root.CFrame.LookVector)
 end)
 
 addcmd('clickdelete',{},function(args, speaker)
@@ -12496,6 +12616,78 @@ addcmd("unstaffwatch", {}, function(args, speaker)
 		staffwatchjoin:Disconnect()
 	end
 	notify("Staffwatch", "Disabled")
+end)
+
+local function playerGroups()
+    local players = Players:GetPlayers()
+    local graph = {}
+    local seen = {}
+    local groups = {}
+
+    for _, p in ipairs(players) do
+        graph[p] = {}
+    end
+
+    for i = 1, #players do
+        for j = i + 1, #players do
+            local p1 = players[i]
+            local p2 = players[j]
+
+            local success, result = pcall(function()
+                return p1:IsFriendsWithAsync(p2.UserId)
+            end)
+
+            if success and result then
+                table.insert(graph[p1], p2)
+                table.insert(graph[p2], p1)
+            end
+        end
+    end
+
+    local function dfs(player, group)
+        seen[player] = true
+        table.insert(group, player)
+
+        for _, possible in ipairs(graph[player]) do
+            if not seen[possible] then
+                dfs(possible, group)
+            end
+        end
+    end
+
+    for _, p in ipairs(players) do
+        if not seen[p] then
+            local group = {}
+            dfs(p, group)
+            table.insert(groups, group)
+        end
+    end
+
+    return groups
+end
+
+addcmd("findfriendgroups", {}, function(args, speaker)
+    notify("Checking Players", "This might take a while (slow function)")
+
+    local groups = playerGroups()
+    local playerList = StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList)
+
+    local result = ""
+    local index = 1
+    local found = 0
+
+    for _, group in ipairs(groups) do
+        if #group == 1 then continue end
+        local names = {}
+        for _, player in ipairs(group) do
+            table.insert(names, playerList and player.DisplayName or player.Name)
+        end
+        result = result .. index .. ". " .. table.concat(names, ", ") .. "\n"
+        index = index + 1
+        found = found + 1
+    end
+
+    createPopup("Friend Groups", found == 0 and "None" or result)
 end)
 
 addcmd('removeterrain',{'rterrain','noterrain'},function(args, speaker)
