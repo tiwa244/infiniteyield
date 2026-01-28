@@ -8033,171 +8033,197 @@ addcmd('lastcommand',{'lastcmd'},function(args, speaker)
 	end
 end)
 
-
 addcmd('esp',{},function(args, speaker)
-_G.ESP_ENABLED = true
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local localPlayer = Players.LocalPlayer
-   
-	local HIGHLIGHT_TAG = "Admin_ESP_Highlight"
-local GUI_TAG = "ESP_Stats"
-
-local function toggleGameHighlights(char, state)
-    for _, obj in ipairs(char:GetChildren()) do
-        -- If it's a Highlight but NOT ours, hide/show it
-        if obj:IsA("Highlight") and obj.Name ~= HIGHLIGHT_TAG then
-            obj.Enabled = state
-        end
-    end
-end
-
-    local function createESP(player)
-        if player == localPlayer then return end
-        local function setup(character)
-            if not character then return end
-            
-            -- HIDE OLD HIGHLIGHTS
-            toggleGameHighlights(character, false)
-
-            local hl = character:FindFirstChild(HIGHLIGHT_TAG) or Instance.new("Highlight")
-            hl.Name = HIGHLIGHT_TAG
-            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            hl.Parent = character
-
-            -- UI SETUP (Same as before)
-            local head = character:WaitForChild("Head", 10)
-            local bgui = character:FindFirstChild(GUI_TAG) or Instance.new("BillboardGui")
-            bgui.Name = GUI_TAG
-            bgui.Adornee = head
-            bgui.AlwaysOnTop = true
-            bgui.Size = UDim2.new(0, 200, 0, 50)
-            bgui.StudsOffset = Vector3.new(0, 4, 0)
-            bgui.Parent = character
-            
-            local txt = bgui:FindFirstChild("Info") or Instance.new("TextLabel")
-            txt.Name = "Info"
-            txt.BackgroundTransparency = 1
-            txt.Size = UDim2.new(1,0,1,0)
-            txt.TextColor3 = Color3.new(1,1,1)
-            txt.TextStrokeTransparency = 0
-			txt.TextSize = 17
-			txt.Font = Enum.Font.RobotoMono
-
-            local conn
-            conn = RunService.RenderStepped:Connect(function()
-                if not character.Parent or not _G.ESP_ENABLED then
-                    conn:Disconnect()
-                    hl:Destroy()
-                    bgui:Destroy()
-                    -- RESTORE OLD HIGHLIGHTS
-                    toggleGameHighlights(character, true)
-                    return
-                end
-                
-                -- Rainbow Logic
-                hl.FillColor = Color3.fromHSV(os.clock() % 4 / 4, 0.8, 1)
-                hl.OutlineColor = hl.FillColor
-                
-                local dist = (character.HumanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude
-                txt.Text = string.format("%s | %d HP | %d Studs", player.Name, math.floor(character.Humanoid.Health), math.floor(dist))
-            end)
-        end
-        player.CharacterAdded:Connect(setup)
-        if player.Character then setup(player.Character) end
-    end
-
-    for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
-end)
-
-addcmd('espteam',{},function(args, speaker)
-_G.ESP_ENABLED = true
-    local Players = game:GetService("Players")
+local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local localPlayer = Players.LocalPlayer
     
-    local HIGHLIGHT_TAG = "Admin_ESP_Highlight"
+    local HIGHLIGHT_TAG = "Rainbow_ESP"
     local GUI_TAG = "ESP_Stats"
+    _G.ESP_ENABLED = true -- Using a global so we can toggle it off from other commands
 
-    local function toggleGameHighlights(char, state)
-        for _, obj in ipairs(char:GetChildren()) do
-            if obj:IsA("Highlight") and obj.Name ~= HIGHLIGHT_TAG then
-                obj.Enabled = state
+    -- Function to clear existing ESP (Preventing stacking)
+    local function clearESP()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then
+                local h = p.Character:FindFirstChild(HIGHLIGHT_TAG)
+                local g = p.Character:FindFirstChild(GUI_TAG)
+                if h then h:Destroy() end
+                if g then g:Destroy() end
             end
         end
     end
 
     local function createESP(player)
         if player == localPlayer then return end
-        
-        local function setup(character)
-            if not character then return end
-            
-            -- Hide game's original highlights
-            toggleGameHighlights(character, false)
 
+        local function setupCharacter(character)
+            if not character then return end
+            local head = character:WaitForChild("Head", 15)
+            local hum = character:WaitForChild("Humanoid", 15)
+            if not head or not hum then return end
+
+            -- 1. RAINBOW HIGHLIGHT
             local hl = character:FindFirstChild(HIGHLIGHT_TAG) or Instance.new("Highlight")
             hl.Name = HIGHLIGHT_TAG
-            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
             hl.FillTransparency = 0.5
+            hl.OutlineTransparency = 0
+            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
             hl.Parent = character
 
-            local head = character:WaitForChild("Head", 10)
-            local hum = character:WaitForChild("Humanoid", 10)
-            
+            -- 2. STATS OVERHEAD
             local bgui = character:FindFirstChild(GUI_TAG) or Instance.new("BillboardGui")
             bgui.Name = GUI_TAG
             bgui.Adornee = head
-            bgui.AlwaysOnTop = true
-            bgui.Size = UDim2.new(0, 200, 0, 50)
+            bgui.Size = UDim2.new(0, 300, 0, 50)
             bgui.StudsOffset = Vector3.new(0, 4, 0)
-            bgui.Parent = character
+            bgui.AlwaysOnTop = true
             
-            local txt = bgui:FindFirstChild("Info") or Instance.new("TextLabel")
-            txt.Name = "Info"
-            txt.BackgroundTransparency = 1
-            txt.Size = UDim2.new(1,0,1,0)
-            txt.TextColor3 = Color3.new(1,1,1) -- Keeping it white as requested
-            txt.TextStrokeTransparency = 0
-            txt.Font = Enum.Font.RobotoMono
-            txt.TextSize = 17
-            txt.Parent = bgui
+            local textLabel = bgui:FindFirstChild("Info") or Instance.new("TextLabel")
+            textLabel.Name = "Info"
+            textLabel.BackgroundTransparency = 1
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            textLabel.TextStrokeTransparency = 0
+            textLabel.Font = Enum.Font.RobotoMono
+            textLabel.TextSize = 17
+            textLabel.Parent = bgui
+            bgui.Parent = character
 
-            local conn
-            conn = RunService.RenderStepped:Connect(function()
-                -- Check if we should kill the ESP
+            -- 3. THE UPDATE LOOP
+            local connection
+            connection = RunService.RenderStepped:Connect(function()
                 if not character.Parent or not _G.ESP_ENABLED then
-                    conn:Disconnect()
+                    connection:Disconnect()
                     if hl then hl:Destroy() end
                     if bgui then bgui:Destroy() end
-                    toggleGameHighlights(character, true) -- Restore game highlights
                     return
                 end
                 
-                -- Team Color Logic
-                local teamCol = player.TeamColor.Color
-                hl.FillColor = teamCol
-                hl.OutlineColor = teamCol
+                local hue = os.clock() % 4 / 4 
+                local rainbow = Color3.fromHSV(hue, 0.8, 1)
+                hl.FillColor = rainbow
+                hl.OutlineColor = rainbow
                 
-                -- Distance check with safety for missing RootParts
                 local dist = 0
-                if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") then
+                if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
                     dist = (character.HumanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude
                 end
                 
-                txt.Text = string.format("%s | %d HP | %d Studs", player.Name, math.floor(hum.Health), math.floor(dist))
+                textLabel.Text = string.format("%s | %d HP | %d Studs", player.Name, math.floor(hum.Health), math.floor(dist))
             end)
         end
-        
-        player.CharacterAdded:Connect(setup)
-        if player.Character then setup(player.Character) end
+
+        player.CharacterAdded:Connect(setupCharacter)
+        if player.Character then setupCharacter(player.Character) end
     end
 
+    -- Run
+    clearESP()
     for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
+    
+    -- Using a unique connection to prevent duplicates
+    if _G.ESP_PlayerAdded then _G.ESP_PlayerAdded:Disconnect() end
+    _G.ESP_PlayerAdded = Players.PlayerAdded:Connect(createESP)
+end)
+
+addcmd('espteam',{},function(args, speaker)
+local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local localPlayer = Players.LocalPlayer
+    
+    local HIGHLIGHT_TAG = "Team_ESP"
+    local GUI_TAG = "ESP_Stats"
+    _G.ESP_ENABLED = true
+
+    local function clearESP()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then
+                local h = p.Character:FindFirstChild(HIGHLIGHT_TAG)
+                local g = p.Character:FindFirstChild(GUI_TAG)
+                if h then h:Destroy() end
+                if g then g:Destroy() end
+            end
+        end
+    end
+
+    local function createESP(player)
+        if player == localPlayer then return end
+
+        local function setupCharacter(character)
+            if not character then return end
+            local head = character:WaitForChild("Head", 15)
+            local hum = character:WaitForChild("Humanoid", 15)
+            if not head or not hum then return end
+
+            -- 1. TEAM COLOR HIGHLIGHT
+            local hl = character:FindFirstChild(HIGHLIGHT_TAG) or Instance.new("Highlight")
+            hl.Name = HIGHLIGHT_TAG
+            hl.FillTransparency = 0.5
+            hl.OutlineTransparency = 0
+            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            hl.Parent = character
+
+            -- 2. STATS OVERHEAD (White Text)
+            local bgui = character:FindFirstChild(GUI_TAG) or Instance.new("BillboardGui")
+            bgui.Name = GUI_TAG
+            bgui.Adornee = head
+            bgui.Size = UDim2.new(0, 300, 0, 50)
+            bgui.StudsOffset = Vector3.new(0, 4, 0)
+            bgui.AlwaysOnTop = true
+            
+            local textLabel = bgui:FindFirstChild("Info") or Instance.new("TextLabel")
+            textLabel.Name = "Info"
+            textLabel.BackgroundTransparency = 1
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            textLabel.TextStrokeTransparency = 0 
+            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+            textLabel.Font = Enum.Font.RobotoMono
+            textLabel.TextSize = 17
+            textLabel.Parent = bgui
+            bgui.Parent = character
+
+            -- 3. THE UPDATE LOOP (Tracks Team Changes + Stats)
+            local connection
+            connection = RunService.RenderStepped:Connect(function()
+                if not character.Parent or not _G.ESP_ENABLED then
+                    connection:Disconnect()
+                    if hl then hl:Destroy() end
+                    if bgui then bgui:Destroy() end
+                    return
+                end
+                
+                -- Dynamic Team Color Update
+                -- We use .Color to convert BrickColor to Color3
+                local teamColor = player.TeamColor.Color
+                hl.FillColor = teamColor
+                hl.OutlineColor = teamColor
+                
+                -- Distance Calc
+                local dist = 0
+                if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    dist = (character.HumanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude
+                end
+                
+                -- KEEPING YOUR TEXT FORMAT EXACTLY THE SAME:
+                textLabel.Text = string.format("%s | %d HP | %d Studs", player.Name, math.floor(hum.Health), math.floor(dist))
+            end)
+        end
+
+        player.CharacterAdded:Connect(setupCharacter)
+        if player.Character then setupCharacter(player.Character) end
+    end
+
+    clearESP()
+    for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
+    
+    if _G.ESP_PlayerAdded then _G.ESP_PlayerAdded:Disconnect() end
+    _G.ESP_PlayerAdded = Players.PlayerAdded:Connect(createESP)
 end)
 
 addcmd('noesp',{'unesp','unespteam'},function(args, speaker)
-	 _G.ESP_ENABLED = false
+	_G.ESP_ENABLED = false
 end)
 
 addcmd("esptransparency", {}, function(args, speaker)
