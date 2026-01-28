@@ -8086,7 +8086,7 @@ local Players = game:GetService("Players")
             textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             textLabel.TextStrokeTransparency = 0
             textLabel.Font = Enum.Font.RobotoMono
-            textLabel.TextSize = 19
+            textLabel.TextSize = 17
             textLabel.Parent = bgui
             bgui.Parent = character
 
@@ -8180,7 +8180,7 @@ local Players = game:GetService("Players")
             textLabel.TextStrokeTransparency = 0 
             textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
             textLabel.Font = Enum.Font.RobotoMono
-            textLabel.TextSize = 19
+            textLabel.TextSize = 17
             textLabel.Parent = bgui
             bgui.Parent = character
 
